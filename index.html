@@ -1,76 +1,597 @@
-<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PAIR ATELIER · 외관 정리 메이커</title>
 <style>
-:root{color-scheme:dark;--bg:#17161d;--panel:#23212c;--line:#3a3545;--ink:#ede8f4;--muted:#aaa1b8;--accent:#c6b1e0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.6 system-ui,-apple-system,'Malgun Gothic',sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;background:#302b3b;color:var(--ink);border:1px solid #494055;border-radius:8px;padding:8px 11px}button:hover{background:#44384f}button.primary{background:#cfbce5;color:#282032;border:0;font-weight:700}header{padding:18px 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1{font:500 20px Georgia,serif;letter-spacing:2px;margin:0}header small{color:var(--muted)}.actions{display:flex;gap:7px;flex-wrap:wrap}.app{display:grid;grid-template-columns:350px minmax(0,1fr);height:calc(100vh - 87px)}aside{padding:18px;overflow:auto;border-right:1px solid var(--line)}details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;padding:13px}summary{cursor:pointer;font-weight:700;letter-spacing:.3px}label{display:block;margin-top:12px;color:var(--muted);font-size:12px}input:not([type=checkbox]):not([type=range]):not([type=color]),textarea,select{width:100%;padding:9px;border:1px solid #494052;background:#19171f;color:var(--ink);border-radius:7px}textarea{resize:vertical;min-height:72px}input[type=color]{width:45px;height:32px;border:0;padding:0;background:none;cursor:pointer}input[type=range]{width:100%;accent-color:var(--accent)}.row{display:flex;gap:9px;align-items:center}.row>*{min-width:0}.row>label{flex:1}.hint{color:var(--muted);font-size:11px;margin:9px 0}.stage{padding:26px;overflow:auto;background:radial-gradient(ellipse at top,#302835,transparent 65%),#1c1921;display:flex;flex-direction:column;align-items:center;gap:16px}.stagebar{width:100%;display:flex;justify-content:space-between;color:var(--muted);font-size:12px}#sheet{width:min(100%,1300px);height:auto;display:block;box-shadow:0 20px 80px #0005;border-radius:3px;touch-action:pan-y}#imageEditor{width:100%;max-height:270px;object-fit:contain;background:repeating-conic-gradient(#35313e 0% 25%,#292530 0% 50%) 0/16px 16px;border-radius:7px;cursor:crosshair;margin-top:10px}.swatchline{display:grid;grid-template-columns:1fr 46px;gap:8px}.block{border-top:1px solid var(--line);padding-top:10px;margin-top:12px}.block button{padding:5px 8px;font-size:11px}.pill{font-size:10px;color:#c8b2dd;letter-spacing:2px}.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{flex:1}.tabs .active{background:#bc9ed1;color:#211929}#toast{position:fixed;bottom:23px;left:50%;transform:translateX(-50%);background:#e6d9ef;color:#302138;padding:12px 22px;border-radius:10px;display:none;z-index:5;max-width:90vw}input[type=file]{font-size:11px;max-width:100%}.hidden{display:none!important}@media(max-width:850px){.app{display:flex;flex-direction:column;height:auto}aside{max-height:none;border-right:0;order:2}.stage{padding:14px;order:1}header{padding:15px}.stagebar{font-size:10px}}
-</style></head><body>
-<header><div><h1>PAIR ATELIER</h1><small>캐릭터의 모습과 관계를 한 장에 정리해 보세요.</small></div><div class="actions"><button id="saveProject">편집 파일 저장</button><button id="loadProject">편집 파일 불러오기</button><button class="primary" id="export">PNG 저장 ↓</button></div></header>
-<div class="app"><aside>
-<details open><summary>01 / 시트 설정</summary><label>구성<select id="mode"><option value="pair">페어 · 두 캐릭터</option><option value="single">개인 · 한 캐릭터</option></select></label><label>페어명 / 시트 제목 (비워 두시면 숨겨집니다)<input id="title" placeholder="Our little universe"></label><label>부제<input id="subtitle" placeholder="CHARACTER REFERENCE"></label><div class="row"><label>배경색 <input id="bg" type="color"></label><label>블록색 <input id="card" type="color"></label><label>글자색 <input id="ink" type="color"></label></div><div class="row"><label>A 강조색 <input id="accentA" type="color"></label><label>B 강조색 <input id="accentB" type="color"></label></div><label>저장 해상도<select id="quality"><option value="1">기본 · 가로 1600px</option><option value="2" selected>고화질 · 가로 3200px</option><option value="3">초고화질 · 가로 4800px</option></select></label><label>하단 크레딧<input id="credit" placeholder="Illustration © / Commission by"></label></details>
-<details open><summary>02 / 중앙 일러스트</summary><label>배치<select id="layout"><option value="main">페어 메인 일러스트 한 장</option><option value="bodies">캐릭터별 전신 두 장</option></select></label><div id="mainUpload"></div></details>
-<details open><summary>03 / 캐릭터 정보</summary><div class="tabs"><button id="tabA">CHARACTER A</button><button id="tabB">CHARACTER B</button></div><div id="characterForm"></div></details>
-<details open><summary>04 / 이미지 조절 · 스포이드</summary><p class="hint">각 이미지의 ‘조절 / 색 추출’을 누르신 후 편집해 주세요. 아래 원본 이미지에서 원하는 곳을 누르시면 색상을 추출할 수 있습니다.</p><strong id="selectedLabel">선택한 이미지 없음</strong><canvas id="imageEditor" width="600" height="400"></canvas><label>맞춤 방식<select id="fit"><option value="contain">전체 보이기</option><option value="cover">블록 채우기</option></select></label><label>확대 <span id="zoomValue"></span><input id="zoom" type="range" min="0.2" max="4" step="0.01"></label><label>가로 위치<input id="posX" type="range" min="-100" max="100"></label><label>세로 위치<input id="posY" type="range" min="-100" max="100"></label><label>색상 적용 대상<select id="colorTarget"><option value="0">홍채</option><option value="1">피부</option><option value="2">머리</option></select></label><div class="row" style="margin-top:12px"><input type="color" id="picked" value="#bba3c5"><code id="pickedHex">#BBA3C5</code><button id="applyColor">현재 캐릭터에 적용</button></div><p class="hint">투명한 부분에서는 색상을 추출할 수 없습니다. 미리보기에는 조절된 이미지가, 이곳에는 원본이 표시됩니다.</p></details>
-<p class="hint">이미지는 브라우저 안에서 처리됩니다. 새로고침 전에 ‘편집 파일 저장’으로 작업을 보관해 주세요.</p>
-</aside><main class="stage"><div class="stagebar"><span>LIVE PREVIEW / 저장되는 이미지와 같은 구성</span><span id="dimensions"></span></div><canvas id="sheet"></canvas><p class="hint">빈 이미지 칸의 안내 문구와 점선은 PNG 저장 시 제외됩니다.</p></main></div><div id="toast" role="status"></div><input type="file" id="projectFile" accept="application/json,.json" hidden>
+  /* 미리보기 전체에도 부드러운 모서리를 적용합니다. */
+  #sheet {
+    border-radius: 22px;
+    box-shadow: 0 14px 50px #00000028;
+  }
+
+  #imageEditor {
+    border-radius: 16px;
+  }
+
+  #mainUpload .block,
+  #characterForm .block {
+    border-top: 0;
+    border-radius: 14px;
+    padding: 12px;
+    background: #ffffff05;
+  }
+
+  #imageAdjustGroup {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  #imageAdjustGroup > h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+  }
+</style>
+
 <script>
-'use strict';
-const $=id=>document.getElementById(id), BASE=1600;
-function slot(){return {src:'',fit:'contain',zoom:1,x:0,y:0}}
-function defaultStats(){return {enabled:false,max:100,items:['체력','지능','민첩','매력','정신력','행운'].map(name=>({name,value:60}))}}
-function person(name){return {stats:defaultStats(),name,height:'',weight:'',speech:'',theme:'',themeArtist:'',meta:'',relation:'',features:'',ng:'',portrait:slot(),sd:slot(),body:slot(),colors:[{label:'홍채',hex:'#77708f',image:slot()},{label:'피부',hex:'#f1d8ca',image:slot()},{label:'머리',hex:'#393542',image:slot()}],extras:[]}}
-let state={version:1,mode:'pair',title:'Our little universe',subtitle:'CHARACTER REFERENCE',bg:'#f1edf3',card:'#fcfafd',ink:'#39323f',accentA:'#a58aad',accentB:'#879bb0',layout:'main',credit:'',main:slot(),people:[person('캐릭터 A'),person('캐릭터 B')]};
-let active=0,selected=null,selectedName='',cache=new Map(),pickRect=null,renderToken=0;
-function toast(t){$('toast').textContent=t;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3500)}
-function element(tag,attrs={},text=''){const e=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));e.textContent=text;return e}
-function field(parent,title,value,fn,area=false){const l=element('label',{},title),i=element(area?'textarea':'input');i.value=value;i.oninput=()=>{fn(i.value);render()};l.append(i);parent.append(l)}
-function loadImage(src){if(!src)return Promise.resolve(null);if(!cache.has(src))cache.set(src,new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>{cache.delete(src);resolve(null)};i.src=src}));return cache.get(src)}
-function uploadUI(parent,s,title){const box=element('div',{class:'block'}),head=element('div',{},title),row=element('div',{class:'row'}),file=element('input',{type:'file',accept:'image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif'}),edit=element('button',{},'調 / 色');edit.textContent='조절 / 색 추출';const del=element('button',{},'삭제');file.onchange=async()=>{const f=file.files[0];if(!f)return;try{const src=await readFile(f);if(!await loadImage(src))throw Error();Object.assign(s,slot(),{src});choose(s,title);render()}catch{toast('이미지를 읽을 수 없습니다. PNG, JPG, WebP 등으로 올려 주세요.')}file.value=''};edit.onclick=()=>choose(s,title);del.onclick=()=>{Object.assign(s,slot());if(selected===s)choose(s,title);render()};row.append(edit,del);box.append(head,file,row);parent.append(box)}
-function readFile(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
-function mountMain(){const p=$('mainUpload');p.replaceChildren();if(state.mode==='single'){uploadUI(p,state.people[0].body,'캐릭터 전신 / 메인 일러스트')}else if(state.layout==='main'){uploadUI(p,state.main,'페어 메인 일러스트')}else{uploadUI(p,state.people[0].body,'A 전신');uploadUI(p,state.people[1].body,'B 전신')}}
-function mountCharacter(){const p=$('characterForm'),c=state.people[active];p.replaceChildren();$('tabA').classList.toggle('active',active===0);$('tabB').classList.toggle('active',active===1);$('tabB').classList.toggle('hidden',state.mode==='single');field(p,'이름',c.name,v=>c.name=v);field(p,'키 (예: 178 cm)',c.height,v=>c.height=v);field(p,'몸무게 (예: 65 kg)',c.weight,v=>c.weight=v);field(p,'간단한 정보 · 나이 / 키워드',c.meta,v=>c.meta=v);uploadUI(p,c.portrait,'두상');field(p,'관계성 (이름을 입력하시면 A → B 표기가 자동으로 바뀝니다)',c.relation,v=>c.relation=v,true);uploadUI(p,c.sd,'나나곰 · SD');field(p,'말투 / 호칭',c.speech,v=>c.speech=v,true);field(p,'테마곡 제목 (중앙 하단에 표시됩니다)',c.theme,v=>c.theme=v);field(p,'테마곡 아티스트',c.themeArtist,v=>c.themeArtist=v);c.colors.forEach((color,i)=>{const box=element('div',{class:'block'});field(box,'색상 항목 이름',color.label,v=>color.label=v);const row=element('div',{class:'row'}),picker=element('input',{type:'color'}),hex=element('input',{'aria-label':'HEX 색상 코드'});picker.value=color.hex;hex.value=color.hex;picker.oninput=()=>{color.hex=picker.value;hex.value=picker.value;render()};hex.onchange=()=>{if(/^#[0-9a-f]{6}$/i.test(hex.value)){color.hex=hex.value;picker.value=hex.value;render()}else{hex.value=color.hex;toast('#RRGGBB 형식으로 입력해 주세요.')}};row.append(picker,hex);box.append(row);uploadUI(box,color.image,color.label+' 참고 이미지 (색상과 함께 표시)');p.append(box)});mountStats(p,c);field(p,'캐릭터 특징',c.features,v=>c.features=v,true);field(p,'NG / 피해야 하는 표현',c.ng,v=>c.ng=v,true);c.extras.forEach((ex,i)=>{const box=element('div',{class:'block'});field(box,'외관 특징 파츠 이름',ex.title,v=>ex.title=v);field(box,'설명',ex.text,v=>ex.text=v,true);uploadUI(box,ex.image,'외관 특징 파츠 이미지 (장신구 등)');const rm=element('button',{},'이 블록 삭제');rm.onclick=()=>{if(selected===ex.image){selected=null;drawEditor()}c.extras.splice(i,1);mountCharacter();render()};box.append(rm);p.append(box)});const add=element('button',{},'+ 외관 특징 파츠 추가 (중앙 하단)' );add.style.marginTop='14px';add.onclick=()=>{if(c.extras.length>=8){toast('추가 파츠는 캐릭터당 최대 8개까지 등록하실 수 있습니다.');return}c.extras.push({title:'특이 사항',text:'',image:slot()});mountCharacter();render()};p.append(add)}
-function mountStats(parent,c){
-const box=element('div',{class:'block'}),l=element('label'),toggle=element('input',{type:'checkbox'});toggle.checked=c.stats.enabled;l.append(toggle,document.createTextNode(' 능력치 스테이터스 표시'));box.append(l);toggle.onchange=()=>{c.stats.enabled=toggle.checked;mountCharacter();render()};
-if(c.stats.enabled){const countLabel=element('label',{},'능력치 개수 · 3~12개'),count=element('select');for(let n=3;n<=12;n++)count.append(element('option',{value:n},n+'개 · 정'+n+'각형'));count.value=c.stats.items.length;count.onchange=()=>{const n=Number(count.value);while(c.stats.items.length<n)c.stats.items.push({name:'능력 '+(c.stats.items.length+1),value:Math.round(c.stats.max*.6)});c.stats.items.length=n;mountCharacter();render()};countLabel.append(count);box.append(countLabel);
-const maxLabel=element('label',{},'최대 수치 · 1~1000'),maxInput=element('input',{type:'number',min:1,max:1000,step:1});maxInput.value=c.stats.max;maxInput.onchange=()=>{const v=Number(maxInput.value);if(!Number.isInteger(v)||v<1||v>1000){maxInput.value=c.stats.max;return}c.stats.max=v;c.stats.items.forEach(i=>i.value=Math.min(i.value,v));mountCharacter();render()};maxLabel.append(maxInput);box.append(maxLabel);
-c.stats.items.forEach((item,i)=>{const row=element('div',{class:'row'}),name=element('input',{'aria-label':'능력 '+(i+1)+' 이름',maxlength:30}),number=element('input',{type:'number',min:0,max:c.stats.max,step:1,'aria-label':'능력 '+(i+1)+' 수치'});name.value=item.name;name.style.width='65%';number.style.width='35%';name.oninput=()=>{item.name=name.value;render()};number.value=item.value;number.onchange=()=>{item.value=Math.max(0,Math.min(c.stats.max,Math.round(Number(number.value)||0)));number.value=item.value;render()};row.style.marginTop='9px';row.append(name,number);const range=element('input',{type:'range',min:0,max:c.stats.max,step:1,'aria-label':item.name+' 수치 조절'});range.value=item.value;range.oninput=()=>{item.value=Number(range.value);number.value=item.value;render()};number.addEventListener('change',()=>range.value=item.value);box.append(row,range)});
-box.append(element('p',{class:'hint'},'각 꼭짓점은 최대 수치, 중앙은 0입니다. 능력명은 도형 바깥 번호와 아래 목록으로 표시됩니다.'));
-}parent.append(box)}
-function radarHeight(p){return p.stats.enabled?340+Math.ceil(p.stats.items.length/2)*35:0}
-function drawRadar(ctx,p,x,y,w,accent){if(!p.stats.enabled)return 0;const h=radarHeight(p)-16;rect(ctx,x,y,w,h,state.card);text(ctx,'STATUS / 능력치',x+18,y+16,w-36,12,700);const items=p.stats.items,n=items.length,cx=x+w/2,cy=y+172,r=98;
-function point(i,ratio=1){const a=-Math.PI/2+i*Math.PI*2/n;return [cx+Math.cos(a)*r*ratio,cy+Math.sin(a)*r*ratio]}
-function polygon(ratio,values=false){ctx.beginPath();items.forEach((item,i)=>{const q=point(i,values?item.value/p.stats.max:ratio);i?ctx.lineTo(...q):ctx.moveTo(...q)});ctx.closePath()}
-ctx.save();ctx.strokeStyle=accent;ctx.lineWidth=1;ctx.globalAlpha=.25;for(let k=1;k<=5;k++){polygon(k/5);ctx.stroke()}items.forEach((item,i)=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...point(i));ctx.stroke()});polygon(1,true);ctx.fillStyle=accent;ctx.globalAlpha=.28;ctx.fill();ctx.globalAlpha=1;ctx.lineWidth=2.5;ctx.stroke();items.forEach((item,i)=>{const q=point(i,item.value/p.stats.max);ctx.beginPath();ctx.arc(...q,3,0,Math.PI*2);ctx.fill();const label=point(i,1.2);font(ctx,12,600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),...label)});ctx.restore();items.forEach((item,i)=>{const xx=x+17+(i%2)*(w-34)/2,yy=y+320+Math.floor(i/2)*35;const value=String(item.value),cw=(w-34)/2;const nameLines=linesAfterFont(ctx,(i+1)+'. '+item.name,cw-43,12);text(ctx,nameLines[0]+(nameLines.length>1?'…':''),xx,yy,cw-43,12);font(ctx,12,700);ctx.textAlign='right';ctx.fillText(value,xx+cw-7,yy)});return h+16}
-function linesAfterFont(ctx,value,w,size){font(ctx,size);return lines(ctx,value,w)}
-function sync(){for(const id of ['mode','title','subtitle','bg','card','ink','accentA','accentB','layout','credit'])$(id).value=state[id];$('layout').disabled=state.mode==='single';if(state.mode==='single')active=0;mountMain();mountCharacter();render()}
-async function choose(s,name){selected=s;selectedName=name;$('selectedLabel').textContent=name;for(const [id,key] of [['fit','fit'],['zoom','zoom'],['posX','x'],['posY','y']])$(id).value=s[key];$('zoomValue').textContent=s.zoom.toFixed(2)+'×';await drawEditor()}
-async function drawEditor(){const cv=$('imageEditor'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);pickRect=null;const s=selected;if(!s)return;const i=await loadImage(s.src);if(s!==selected||!i)return;const scale=Math.min(cv.width/i.width,cv.height/i.height),w=i.width*scale,h=i.height*scale,x=(cv.width-w)/2,y=(cv.height-h)/2;ctx.drawImage(i,x,y,w,h);pickRect={x,y,w,h}}
-$('imageEditor').onclick=e=>{if(!pickRect)return;const cv=$('imageEditor'),r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.width/r.width,y=(e.clientY-r.top)*cv.height/r.height,p=pickRect;if(x<p.x||x>=p.x+p.w||y<p.y||y>=p.y+p.h)return;const a=cv.getContext('2d').getImageData(Math.floor(x),Math.floor(y),1,1).data;if(a[3]<240){toast('투명하지 않은 곳을 선택해 주세요.');return}const hex='#'+[...a].slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('');$('picked').value=hex;$('pickedHex').textContent=hex.toUpperCase()};
-$('picked').oninput=()=>$('pickedHex').textContent=$('picked').value.toUpperCase();$('applyColor').onclick=()=>{state.people[active].colors[Number($('colorTarget').value)].hex=$('picked').value;mountCharacter();render();toast('선택하신 캐릭터의 색상에 적용했습니다.')};
-for(const [id,key] of [['fit','fit'],['zoom','zoom'],['posX','x'],['posY','y']])$(id).oninput=()=>{if(!selected)return;selected[key]=id==='fit'?$(id).value:Number($(id).value);$('zoomValue').textContent=selected.zoom.toFixed(2)+'×';render()};
-for(const id of ['mode','title','subtitle','bg','card','ink','accentA','accentB','layout','credit'])$(id).oninput=()=>{state[id]=$(id).value;if(['mode','layout'].includes(id))sync();else render()};$('tabA').onclick=()=>{active=0;mountCharacter()};$('tabB').onclick=()=>{active=1;mountCharacter()};
-function rounded(ctx,x,y,w,h,r=14){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
-function rect(ctx,x,y,w,h,color,r=14){ctx.fillStyle=color;rounded(ctx,x,y,w,h,r);ctx.fill()}
-function font(ctx,size=18,weight=400){ctx.font=`${weight} ${size}px system-ui, -apple-system, 'Malgun Gothic', sans-serif`;ctx.fillStyle=state.ink;ctx.textAlign='left';ctx.textBaseline='top'}
-function lines(ctx,text,width){const result=[];for(const raw of String(text).split('\n')){let line='';for(const ch of raw){if(line&&ctx.measureText(line+ch).width>width){result.push(line);line=ch}else line+=ch}result.push(line)}return result}
-function text(ctx,str,x,y,w,size=18,weight=400){font(ctx,size,weight);const ls=lines(ctx,str,w);ls.forEach((s,i)=>ctx.fillText(s,x,y+i*size*1.6));return ls.length*size*1.6}
-function textHeight(ctx,str,w,size=18){font(ctx,size);return lines(ctx,str,w).length*size*1.6}
-function imageSlot(ctx,s,x,y,w,h,label,preview){const i=s.src?cache.get(s.src+'#loaded'):null;ctx.save();rounded(ctx,x,y,w,h,10);ctx.clip();if(i){const scale=(s.fit==='cover'?Math.max(w/i.width,h/i.height):Math.min(w/i.width,h/i.height))*s.zoom;const dw=i.width*scale,dh=i.height*scale;ctx.drawImage(i,x+(w-dw)/2+s.x/100*w,y+(h-dh)/2+s.y/100*h,dw,dh)}else if(preview){ctx.fillStyle=state.ink;ctx.globalAlpha=.035;ctx.fillRect(x,y,w,h);ctx.globalAlpha=.25;ctx.strokeStyle=state.ink;ctx.setLineDash([5,6]);ctx.strokeRect(x+2,y+2,w-4,h-4);font(ctx,16);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2)}ctx.restore()}
-async function preload(){const slots=[state.main];for(const p of state.people){slots.push(p.portrait,p.sd,p.body,...p.colors.map(c=>c.image),...p.extras.map(e=>e.image))}await Promise.all(slots.filter(s=>s.src).map(async s=>{const i=await loadImage(s.src);if(i)cache.set(s.src+'#loaded',i)}))}
-function headerHeight(ctx,p,w){return Math.max(65,textHeight(ctx,p.name||' ',w-22,25)+25)}
-function drawSide(ctx,p,x,y,w,accent,preview){const start=y;const name=p.name||' ';font(ctx,25,700);const nameLines=lines(ctx,name,w-22);const metrics=ctx.measureText(nameLines[0]||'가');const ascent=metrics.actualBoundingBoxAscent??0,descent=metrics.actualBoundingBoxDescent??25;rect(ctx,x,y-ascent,4,Math.max(1,(nameLines.length-1)*40+descent+ascent),accent,2);text(ctx,name,x+18,y,w-22,25,700);y+=headerHeight(ctx,p,w);rect(ctx,x,y,w,300,state.card);imageSlot(ctx,p.portrait,x+12,y+12,w-24,276,'두상 일러스트',preview);y+=320;
-function textCard(title,value){if(!value)return;const h=textHeight(ctx,value,w-40)+62;rect(ctx,x,y,w,h,state.card);text(ctx,title,x+20,y+15,w-40,12,700);text(ctx,value,x+20,y+39,w-40,18);y+=h+16}
-const index=state.people.indexOf(p),other=state.people[1-index];const relationTitle=state.mode==='pair'?(p.name|| (index===0?'A':'B'))+' → '+(other.name||(index===0?'B':'A')):'ABOUT / 캐릭터 소개';
-textCard(relationTitle,p.relation);rect(ctx,x,y,w,220,state.card);text(ctx,'NANAGOM / 나나곰',x+18,y+14,w-36,11,600);imageSlot(ctx,p.sd,x+15,y+40,w-30,164,'나나곰 · SD',preview);y+=240;
-textCard('PROFILE / 기본 정보',[p.height?'키 '+p.height:'',p.weight?'몸무게 '+p.weight:'',p.meta].filter(Boolean).join(' · '));textCard('FEATURES / 특징',p.features);textCard('SPEECH / 말투 · 호칭',p.speech);textCard('NG / 주의 사항',p.ng);
-rect(ctx,x,y,w,130,state.card);const cw=(w-32)/3;p.colors.forEach((c,i)=>{const xx=x+16+i*cw;rect(ctx,xx,y+18,cw-8,46,c.hex,8);if(c.image.src)imageSlot(ctx,c.image,xx,y+18,cw-8,46,'',preview);rect(ctx,xx,y+69,cw-8,7,c.hex,3);text(ctx,c.label,xx,y+84,cw-8,12,600);text(ctx,c.hex.toUpperCase(),xx,y+103,cw-8,10)});y+=150;y+=drawRadar(ctx,p,x,y,w,accent);return y-start}
-function centerExtras(ctx,x,y,w,preview){const start=y,people=state.mode==='pair'?state.people:[state.people[0]],entries=people.flatMap(p=>p.extras.map(e=>({p,e}))),cols=state.mode==='pair'?2:Math.min(2,Math.max(1,entries.length)),gap=16,cw=(w-gap*(cols-1))/cols;for(let i=0;i<entries.length;i+=cols){const row=entries.slice(i,i+cols);const heights=row.map(({p,e})=>56+textHeight(ctx,(p.name||'캐릭터')+' / '+e.title,cw-32,14)+(e.image.src||preview?210:0)+(e.text?textHeight(ctx,e.text,cw-32,16)+16:0));const h=Math.max(...heights);row.forEach(({p,e},j)=>{const xx=x+j*(cw+gap);rect(ctx,xx,y,cw,h,state.card);let yy=y+16;yy+=text(ctx,(p.name||'캐릭터')+' / '+e.title,xx+16,yy,cw-32,14,700)+14;if(e.image.src||preview){imageSlot(ctx,e.image,xx+12,yy,cw-24,194,'외관 특징 파츠',preview);yy+=210}if(e.text)text(ctx,e.text,xx+16,yy,cw-32,16)});y+=h+16}
-const themed=people.filter(p=>p.theme||p.themeArtist);if(themed.length){const tw=(w-gap*(themed.length-1))/themed.length;const hs=themed.map(p=>56+textHeight(ctx,p.name||'캐릭터',tw-32,13)+textHeight(ctx,p.theme,tw-32,18)+(p.themeArtist?textHeight(ctx,p.themeArtist,tw-32,13)+8:0));const h=Math.max(...hs);themed.forEach((p,i)=>{const xx=x+i*(tw+gap);rect(ctx,xx,y,tw,h,state.card);let yy=y+16;yy+=text(ctx,'THEME / '+(p.name||'캐릭터'),xx+16,yy,tw-32,13,700)+12;yy+=text(ctx,p.theme,xx+16,yy,tw-32,18,600);if(p.themeArtist)text(ctx,p.themeArtist,xx+16,yy+8,tw-32,13)});y+=h+16}return y-start}
-async function draw(canvas,scale=1,preview=true){await preload();const measuring=document.createElement('canvas').getContext('2d'),pair=state.mode==='pair',sw=pair?330:370,gap=28,pad=58,centerX=pad+sw+gap,centerW=1600-2*pad-sw-gap-(pair?sw+gap:0);const top=state.title?165:100;const leftH=drawSide(measuring,state.people[0],pad,top,sw,state.accentA,preview),rightH=pair?drawSide(measuring,state.people[1],1600-pad-sw,top,sw,state.accentB,preview):0;const mainH=980,extraH=centerExtras(measuring,centerX,top+mainH+16,centerW,preview);const bodyHeight=Math.max(mainH+16+extraH,leftH,rightH),height=Math.ceil(top+bodyHeight+85);canvas.width=1600*scale;canvas.height=height*scale;const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.fillStyle=state.bg;ctx.fillRect(0,0,1600,height);if(state.title){font(ctx,38,500);ctx.textAlign='center';ctx.fillText(state.title,800,48)}if(state.subtitle){font(ctx,12,500);ctx.textAlign='center';ctx.fillText(state.subtitle,800,state.title?106:45)}drawSide(ctx,state.people[0],pad,top,sw,state.accentA,preview);if(pair)drawSide(ctx,state.people[1],1600-pad-sw,top,sw,state.accentB,preview);rect(ctx,centerX,top,centerW,mainH,state.card,18);const ix=centerX+20,iy=top+20,iw=centerW-40,ih=mainH-40;if(!pair)imageSlot(ctx,state.people[0].body,ix,iy,iw,ih,'메인 일러스트 / 전신',preview);else if(state.layout==='main')imageSlot(ctx,state.main,ix,iy,iw,ih,'페어 메인 일러스트',preview);else{imageSlot(ctx,state.people[0].body,ix,iy,(iw-12)/2,ih,'A 전신',preview);imageSlot(ctx,state.people[1].body,ix+(iw+12)/2,iy,(iw-12)/2,ih,'B 전신',preview)}centerExtras(ctx,centerX,top+mainH+16,centerW,preview);if(state.credit){font(ctx,13);ctx.textAlign='center';ctx.fillText(state.credit,800,height-42)}return {width:1600,height}}
-async function render(){const token=++renderToken;await preload();if(token!==renderToken)return;const dims=await draw($('sheet'));$('dimensions').textContent=`${dims.width} × ${dims.height}`}
-function download(blob,name){const a=element('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
-function filename(){return (state.title||state.people[0].name||'character-reference').replace(/[\\/:*?"<>|]/g,'_').slice(0,70)}
-$('export').onclick=async()=>{const b=$('export');b.disabled=true;b.textContent='이미지를 만드는 중입니다…';try{const c=document.createElement('canvas');await draw(c,Number($('quality').value),false);const blob=await new Promise(resolve=>c.toBlob(resolve,'image/png'));if(!blob)throw Error();download(blob,filename()+'.png');toast('PNG 이미지를 저장했습니다.')}catch(e){toast('저장하지 못했습니다. 해상도를 낮추신 후 다시 시도해 주세요.');console.error(e)}finally{b.disabled=false;b.textContent='PNG 저장 ↓'}};
-$('saveProject').onclick=()=>download(new Blob([JSON.stringify(state)],{type:'application/json'}),filename()+'.json');$('loadProject').onclick=()=>$('projectFile').click();
-function validate(s){if(!s||s.version!==1||!['pair','single'].includes(s.mode)||!['main','bodies'].includes(s.layout)||!Array.isArray(s.people)||s.people.length!==2)throw Error();const string=(v,max=20000)=>{if(typeof v!=='string'||v.length>max)throw Error()};const color=v=>{if(!/^#[0-9a-f]{6}$/i.test(v))throw Error()};const checkSlot=v=>{if(!v||!['contain','cover'].includes(v.fit))throw Error();string(v.src,40000000);if(v.src&&!/^data:image\/(png|jpeg|jpg|webp|gif|bmp|avif);base64,/i.test(v.src))throw Error();for(const k of ['zoom','x','y'])if(typeof v[k]!=='number'||!Number.isFinite(v[k]))throw Error();if(v.zoom<.2||v.zoom>4||Math.abs(v.x)>100||Math.abs(v.y)>100)throw Error()};for(const k of ['title','subtitle','credit'])string(s[k],500);for(const k of ['bg','card','ink','accentA','accentB'])color(s[k]);checkSlot(s.main);for(const p of s.people){for(const k of ['speech','theme','themeArtist']){if(p[k]===undefined)p[k]='';string(p[k]);}if(p.height===undefined)p.height='';if(p.weight===undefined)p.weight='';string(p.height,100);string(p.weight,100);if(!p.stats)p.stats=defaultStats();const st=p.stats;if(typeof st.enabled!=='boolean'||!Number.isInteger(st.max)||st.max<1||st.max>1000||!Array.isArray(st.items)||st.items.length<3||st.items.length>12)throw Error();for(const item of st.items){string(item.name,30);if(!Number.isInteger(item.value)||item.value<0||item.value>st.max)throw Error()}for(const k of ['name','meta','relation','features','ng'])string(p[k]);for(const k of ['portrait','sd','body'])checkSlot(p[k]);if(!Array.isArray(p.colors)||p.colors.length!==3||!Array.isArray(p.extras)||p.extras.length>8)throw Error();for(const c of p.colors){string(c.label);color(c.hex);checkSlot(c.image)}for(const e of p.extras){string(e.title);string(e.text);checkSlot(e.image)}}return s}
-$('projectFile').onchange=async()=>{const f=$('projectFile').files[0];if(!f)return;try{if(f.size>150*1024*1024)throw Error();const next=validate(JSON.parse(await f.text()));state=next;cache.clear();selected=null;active=0;$('selectedLabel').textContent='선택한 이미지 없음';drawEditor();sync();toast('편집 파일을 불러왔습니다.')}catch{toast('지원하지 않는 편집 파일이거나 파일이 손상되었습니다.')}finally{$('projectFile').value=''}};
-sync();
-</script></body></html>
+(() => {
+  'use strict';
+
+  /*
+   * 기존 스크립트 뒤에 추가하는 수정 코드입니다.
+   * 기존 편집 파일도 그대로 불러올 수 있습니다.
+   */
+
+  /* 02번과 04번 편집 영역을 합칩니다. */
+  const mainSection = $('mainUpload').closest('details');
+  const adjustSection = $('imageEditor').closest('details');
+
+  if (mainSection && adjustSection &&
+      mainSection !== adjustSection) {
+    mainSection.querySelector('summary').textContent =
+      '02 / 일러스트 · 이미지 조절';
+
+    const group = document.createElement('div');
+    group.id = 'imageAdjustGroup';
+
+    const heading = document.createElement('h3');
+    heading.textContent = '선택한 이미지 조절 · 색상 추출';
+    group.append(heading);
+
+    [...adjustSection.children].forEach(node => {
+      if (node.tagName !== 'SUMMARY') {
+        group.append(node);
+      }
+    });
+
+    mainSection.append(group);
+    adjustSection.remove();
+  }
+
+  /*
+   * 이름은 한 줄 입력을 유지하고,
+   * 키·몸무게·기본 정보는 여러 줄 입력을 허용합니다.
+   */
+  const originalField = field;
+
+  field = function(parent, title, value, onChange, area = false) {
+    const multiline =
+      area ||
+      title.startsWith('키 (') ||
+      title.startsWith('몸무게 (') ||
+      title.startsWith('간단한 정보');
+
+    originalField(parent, title, value, onChange, multiline);
+  };
+
+  /*
+   * 이미지 칸:
+   * 점선과 테두리를 그리지 않고 둥근 모서리로 자릅니다.
+   */
+  imageSlot = function(
+    ctx, s, x, y, w, h, label, preview
+  ) {
+    if (w <= 0 || h <= 0) return;
+
+    const image = s.src
+      ? cache.get(s.src + '#loaded')
+      : null;
+
+    ctx.save();
+    rounded(ctx, x, y, w, h, 24);
+    ctx.clip();
+
+    if (image) {
+      const baseScale = s.fit === 'cover'
+        ? Math.max(w / image.width, h / image.height)
+        : Math.min(w / image.width, h / image.height);
+
+      const imageScale = baseScale * s.zoom;
+      const dw = image.width * imageScale;
+      const dh = image.height * imageScale;
+
+      ctx.drawImage(
+        image,
+        x + (w - dw) / 2 + s.x / 100 * w,
+        y + (h - dh) / 2 + s.y / 100 * h,
+        dw,
+        dh
+      );
+    } else if (preview) {
+      /* 안내 문구만 표시합니다. 테두리는 없습니다. */
+      ctx.globalAlpha = 0.24;
+      font(ctx, 13);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x + w / 2, y + h / 2);
+    }
+
+    ctx.restore();
+  };
+
+  /*
+   * 이름 영역 높이는 양쪽 중 긴 이름에 맞춥니다.
+   * 이 높이 뒤에서 두상과 메인 일러스트가 함께 시작합니다.
+   */
+  function nameAreaHeight(ctx, p, w) {
+    return textHeight(ctx, p.name || ' ', w - 20, 25);
+  }
+
+  function commonNameHeight(ctx, w) {
+    const people = state.mode === 'pair'
+      ? state.people
+      : [state.people[0]];
+
+    return Math.max(
+      ...people.map(p => nameAreaHeight(ctx, p, w))
+    ) + 8;
+  }
+
+  headerHeight = function(ctx, p, w) {
+    return commonNameHeight(ctx, w);
+  };
+
+  /*
+   * 측정時と描画時で同じ関数を使い、
+   * 必要な高さだけを確保します。
+   */
+  function compactSide(ctx, p, x, y, w, accent, preview) {
+    const start = y;
+    const headerH = commonNameHeight(ctx, w);
+    const nameH = nameAreaHeight(ctx, p, w);
+
+    /* 名前は下端をそろえ、頭像との間隔を小さくします。 */
+    const nameY = y + headerH - nameH - 8;
+
+    font(ctx, 25, 700);
+
+    const nameLines = lines(ctx, p.name || ' ', w - 20);
+    const metrics = ctx.measureText(nameLines[0] || '가');
+    const ascent = metrics.actualBoundingBoxAscent ?? 0;
+    const descent = metrics.actualBoundingBoxDescent ?? 25;
+
+    const visibleNameH = Math.max(
+      1,
+      ascent + descent + (nameLines.length - 1) * 40
+    );
+
+    rect(
+      ctx,
+      x,
+      nameY - ascent,
+      4,
+      visibleNameH,
+      accent,
+      2
+    );
+
+    text(ctx, p.name || '', x + 16, nameY, w - 20, 25, 700);
+    y += headerH;
+
+    /* 두상: 외곽선 없이 둥근 이미지 블록으로 표시합니다. */
+    rect(ctx, x, y, w, 276, state.card, 24);
+
+    imageSlot(
+      ctx, p.portrait,
+      x, y, w, 276,
+      '두상 일러스트', preview
+    );
+
+    y += 288;
+
+    function infoCard(title, value) {
+      if (!String(value || '').trim()) return;
+
+      const contentW = w - 28;
+      const titleH = textHeight(ctx, title, contentW, 12);
+      const contentH = textHeight(ctx, value, contentW, 18);
+
+      /* 위 12 + 제목 + 간격 7 + 본문 + 아래 12 */
+      const h = 12 + titleH + 7 + contentH + 12;
+
+      rect(ctx, x, y, w, h, state.card, 20);
+
+      text(ctx, title, x + 14, y + 12, contentW, 12, 700);
+
+      text(
+        ctx, value,
+        x + 14, y + 12 + titleH + 7,
+        contentW, 18
+      );
+
+      y += h + 12;
+    }
+
+    const index = state.people.indexOf(p);
+
+    const relationTitle = state.mode === 'pair'
+      ? (p.name || (index === 0 ? 'A' : 'B')) +
+        ' → ' +
+        (state.people[1 - index].name ||
+          (index === 0 ? 'B' : 'A'))
+      : 'ABOUT / 캐릭터 소개';
+
+    infoCard(relationTitle, p.relation);
+
+    /* 나나곰 */
+    rect(ctx, x, y, w, 194, state.card, 24);
+
+    text(
+      ctx, 'NANAGOM / 나나곰',
+      x + 14, y + 12, w - 28, 11, 600
+    );
+
+    imageSlot(
+      ctx, p.sd,
+      x + 10, y + 34, w - 20, 150,
+      '나나곰 · SD', preview
+    );
+
+    y += 206;
+
+    /*
+     * 기본 정보는 항목별로 줄을 나눕니다.
+     * 각 입력 내용 안의 줄바꿈도 그대로 유지합니다.
+     */
+    const basic = [
+      p.height ? '키  ' + p.height : '',
+      p.weight ? '몸무게  ' + p.weight : '',
+      p.meta || ''
+    ].filter(Boolean).join('\n');
+
+    infoCard('PROFILE / 기본 정보', basic);
+    infoCard('FEATURES / 특징', p.features);
+    infoCard('SPEECH / 말투 · 호칭', p.speech);
+    infoCard('NG / 주의 사항', p.ng);
+
+    /* 색상 파츠 */
+    rect(ctx, x, y, w, 118, state.card, 22);
+
+    const colorW = (w - 28) / 3;
+
+    p.colors.forEach((color, i) => {
+      const xx = x + 14 + i * colorW;
+      const innerW = colorW - 8;
+
+      rect(ctx, xx, y + 12, innerW, 42, color.hex, 12);
+
+      if (color.image.src) {
+        imageSlot(
+          ctx, color.image,
+          xx, y + 12, innerW, 42,
+          '', preview
+        );
+      }
+
+      rect(ctx, xx, y + 61, innerW, 5, color.hex, 2);
+
+      text(ctx, color.label, xx, y + 74, innerW, 12, 600);
+
+      text(
+        ctx, color.hex.toUpperCase(),
+        xx, y + 94, innerW, 10
+      );
+    });
+
+    y += 130;
+
+    if (p.stats.enabled) {
+      y += drawRadar(ctx, p, x, y, w, accent);
+    }
+
+    /* 最後のカードの後ろに余白を追加しません。 */
+    return y - start - (p.stats.enabled ? 16 : 12);
+  }
+
+  drawSide = compactSide;
+
+  /*
+   * 추가 파츠:
+   * 중앙 하단에서 작은 카드로 배치합니다.
+   * 이미지 높이는 110px입니다.
+   * 행마다 가장 높은 카드에 맞추되 다음 행까지 12px만 둡니다.
+   */
+  function compactCenter(ctx, x, y, w, preview) {
+    const start = y;
+    const people = state.mode === 'pair'
+      ? state.people
+      : [state.people[0]];
+
+    const entries = people.flatMap(p =>
+      p.extras.map(e => ({ p, e }))
+    );
+
+    const gap = 12;
+    const cols = 2;
+    const cardW = (w - gap) / cols;
+    const imageH = 110;
+
+    for (let i = 0; i < entries.length; i += cols) {
+      const row = entries.slice(i, i + cols);
+
+      const specs = row.map(({ p, e }) => {
+        const title = (p.name || '캐릭터') + ' / ' + e.title;
+        const titleH = textHeight(ctx, title, cardW - 24, 12);
+        const bodyH = e.text
+          ? textHeight(ctx, e.text, cardW - 24, 14)
+          : 0;
+
+        /*
+         * 빈 이미지도 미리보기/저장 높이를 동일하게 유지합니다.
+         * 저장할 때 안내 문구만 사라집니다.
+         */
+        const h =
+          12 + titleH + 8 + imageH +
+          (bodyH ? 8 + bodyH : 0) + 12;
+
+        return { title, titleH, h };
+      });
+
+      const rowH = Math.max(...specs.map(item => item.h));
+
+      row.forEach(({ e }, j) => {
+        const xx = x + j * (cardW + gap);
+        const spec = specs[j];
+
+        rect(ctx, xx, y, cardW, spec.h, state.card, 20);
+
+        text(
+          ctx, spec.title,
+          xx + 12, y + 12, cardW - 24, 12, 700
+        );
+
+        const imageY = y + 12 + spec.titleH + 8;
+
+        imageSlot(
+          ctx, e.image,
+          xx + 10, imageY, cardW - 20, imageH,
+          '외관 특징 파츠', preview
+        );
+
+        if (e.text) {
+          text(
+            ctx, e.text,
+            xx + 12, imageY + imageH + 8,
+            cardW - 24, 14
+          );
+        }
+      });
+
+      y += rowH + gap;
+    }
+
+    /* 테마곡은 입력한 경우에만 표시합니다. */
+    const themed = people.filter(p => p.theme || p.themeArtist);
+
+    if (themed.length) {
+      const themeW =
+        (w - gap * (themed.length - 1)) / themed.length;
+
+      const specs = themed.map(p => {
+        const label = 'THEME / ' + (p.name || '캐릭터');
+        const labelH = textHeight(ctx, label, themeW - 24, 11);
+
+        const titleH = p.theme
+          ? textHeight(ctx, p.theme, themeW - 24, 16)
+          : 0;
+
+        const artistH = p.themeArtist
+          ? textHeight(ctx, p.themeArtist, themeW - 24, 12)
+          : 0;
+
+        return {
+          label,
+          labelH,
+          titleH,
+          artistH,
+          h: 12 + labelH +
+            (titleH ? 7 + titleH : 0) +
+            (artistH ? 5 + artistH : 0) + 12
+        };
+      });
+
+      themed.forEach((p, i) => {
+        const xx = x + i * (themeW + gap);
+        const spec = specs[i];
+
+        rect(ctx, xx, y, themeW, spec.h, state.card, 20);
+
+        let yy = y + 12;
+
+        yy += text(
+          ctx, spec.label,
+          xx + 12, yy, themeW - 24, 11, 700
+        );
+
+        if (p.theme) {
+          yy += 7;
+          yy += text(
+            ctx, p.theme,
+            xx + 12, yy, themeW - 24, 16, 600
+          );
+        }
+
+        if (p.themeArtist) {
+          text(
+            ctx, p.themeArtist,
+            xx + 12, yy + 5, themeW - 24, 12
+          );
+        }
+      });
+
+      y += Math.max(...specs.map(item => item.h)) + gap;
+    }
+
+    return Math.max(0, y - start - gap);
+  }
+
+  centerExtras = compactCenter;
+
+  /*
+   * 전체 배치:
+   * 양쪽 정보 높이에서 하단 파츠 높이를 뺀 만큼을
+   * 중앙 일러스트 영역으로 사용합니다.
+   */
+  draw = async function(canvas, scale = 1, preview = true) {
+    await preload();
+
+    const measure =
+      document.createElement('canvas').getContext('2d');
+
+    const pair = state.mode === 'pair';
+    const sideW = pair ? 330 : 370;
+    const gap = 28;
+    const padding = 58;
+
+    const centerX = padding + sideW + gap;
+    const centerW =
+      1600 - padding * 2 - sideW - gap -
+      (pair ? sideW + gap : 0);
+
+    const top = state.title ? 145 : 76;
+    const nameH = commonNameHeight(measure, sideW);
+
+    const leftH = compactSide(
+      measure, state.people[0],
+      padding, top, sideW,
+      state.accentA, preview
+    );
+
+    const rightH = pair
+      ? compactSide(
+          measure, state.people[1],
+          1600 - padding - sideW, top, sideW,
+          state.accentB, preview
+        )
+      : 0;
+
+    const extraH = compactCenter(
+      measure, centerX, 0, centerW, preview
+    );
+
+    const extraGap = extraH ? 12 : 0;
+    const sideH = Math.max(leftH, rightH);
+
+    /*
+     * 固定980pxを撤廃します。
+     * 최소 일러스트 높이를 제외하면 양쪽 높이에 맞춥니다.
+     */
+    const mainH = Math.max(
+      420,
+      sideH - nameH - extraGap - extraH
+    );
+
+    const centerH = nameH + mainH + extraGap + extraH;
+    const bodyH = Math.max(sideH, centerH);
+
+    const bottom = state.credit ? 56 : 26;
+    const height = Math.ceil(top + bodyH + bottom);
+
+    canvas.width = 1600 * scale;
+    canvas.height = height * scale;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = state.bg;
+    ctx.fillRect(0, 0, 1600, height);
+
+    if (state.title) {
+      font(ctx, 38, 500);
+      ctx.textAlign = 'center';
+      ctx.fillText(state.title, 800, 36);
+    }
+
+    if (state.subtitle) {
+      font(ctx, 12, 500);
+      ctx.textAlign = 'center';
+      ctx.fillText(state.subtitle, 800, state.title ? 94 : 30);
+    }
+
+    compactSide(
+      ctx, state.people[0],
+      padding, top, sideW,
+      state.accentA, preview
+    );
+
+    if (pair) {
+      compactSide(
+        ctx, state.people[1],
+        1600 - padding - sideW, top, sideW,
+        state.accentB, preview
+      );
+    }
+
+    /* メインイラストと頭像の開始位置を一致させます。 */
+    const mainY = top + nameH;
+
+    rect(
+      ctx, centerX, mainY,
+      centerW, mainH, state.card, 26
+    );
+
+    if (!pair) {
+      imageSlot(
+        ctx, state.people[0].body,
+        centerX, mainY, centerW, mainH,
+        '메인 일러스트 / 전신', preview
+      );
+    } else if (state.layout === 'main') {
+      imageSlot(
+        ctx, state.main,
+        centerX, mainY, centerW, mainH,
+        '페어 메인 일러스트', preview
+      );
+    } else {
+      const bodyW = (centerW - 12) / 2;
+
+      imageSlot(
+        ctx, state.people[0].body,
+        centerX, mainY, bodyW, mainH,
+        'A 전신', preview
+      );
+
+      imageSlot(
+        ctx, state.people[1].body,
+        centerX + bodyW + 12, mainY, bodyW, mainH,
+        'B 전신', preview
+      );
+    }
+
+    if (extraH) {
+      compactCenter(
+        ctx, centerX, mainY + mainH + extraGap,
+        centerW, preview
+      );
+    }
+
+    if (state.credit) {
+      font(ctx, 13);
+      ctx.textAlign = 'center';
+      ctx.fillText(state.credit, 800, height - 32);
+    }
+
+    return { width: 1600, height };
+  };
+
+  /* 변경된 입력창과 미리보기를 갱신합니다. */
+  mountCharacter();
+  render();
+})();
+</script>
